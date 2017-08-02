@@ -10,7 +10,10 @@ namespace MusicPlayer
     {
         public static List<string> unplayedSongs = new List<string>();
         public static WindowsMediaPlayer currentSong = new WindowsMediaPlayer();
+        private static Random rand = new Random();
         static Thread songthread;
+        static int count = 0;
+        static int volume = 1;
 
         static void Main(string[] args)
         {
@@ -26,15 +29,14 @@ namespace MusicPlayer
 
         private static void PlaySong()
         {
-            Random rand = new Random();
-
             play:
-            //songthread?.Abort();
-            songthread = new Thread(() => PlaySong(unplayedSongs[rand.Next(0, unplayedSongs.Count)]));
+            songthread?.Abort();
+            songthread = new Thread(() => PlaySong(unplayedSongs[rand.Next(0, unplayedSongs.Count)])) {Name = $"PlaySongThread" };
             songthread.Start();
 
             loop:
             CleanAndDisplayName();
+
             while (true)
             {
                 var input = Console.ReadLine();
@@ -72,7 +74,7 @@ namespace MusicPlayer
 
                 if (s != 0)
                 {
-                    currentSong.settings.volume = int.Parse(input);
+                    volume = currentSong.settings.volume = int.Parse(input);
                     goto loop;
                 }
             }
@@ -83,7 +85,7 @@ namespace MusicPlayer
             Console.Clear();
 
             PrintControlls();
-            Console.WriteLine($"currently Playing: {currentSong.currentMedia?.name}");
+            Console.WriteLine($"Currently Playing: {currentSong.currentMedia?.name}");
 
             if (currentSong.currentMedia == null)
                 CleanAndDisplayName();
@@ -157,7 +159,10 @@ namespace MusicPlayer
                 
                 if((currentSong.controls.currentPosition >= currentSong.currentMedia.duration) || (currentSong.controls.currentPosition <= 0.5))
                 {
-                    PlaySong();
+                    currentSong.URL = unplayedSongs[rand.Next(0, unplayedSongs.Count)];
+                    currentSong.settings.volume = volume;
+                    currentSong.controls.play();
+                    CleanAndDisplayName();
                 }
             }
         }
