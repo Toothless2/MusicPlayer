@@ -6,23 +6,32 @@ using System.Threading;
 
 namespace MusicPlayer
 {
-    public class Program
+    public class Player
     {
         public static List<string> unplayedSongs = new List<string>();
+        public static List<string> playedSongs = new List<string>();
         public static WindowsMediaPlayer currentSong = new WindowsMediaPlayer();
+
+        private static Thread songthread;
+
         private static Random rand = new Random();
-        static Thread songthread;
-        static int count = 0;
-        static int volume = 1;
+
+        private static int count = 0;
+        private static int volume = 1;
+        private static bool repeat = true;
 
         static void Main(string[] args)
         {
             AddSongPaths();
             AddExcludePaths();
+
+            Console.WriteLine("Would you like song repeats? (Y/N)");
+            var input = Console.ReadLine();
+
+            if (input.ToLower() == "n")
+                repeat = false;
+
             PlaySong();
-
-
-            //goto play;
 
             Console.ReadLine();
         }
@@ -31,7 +40,7 @@ namespace MusicPlayer
         {
             play:
             songthread?.Abort();
-            songthread = new Thread(() => PlaySong(unplayedSongs[rand.Next(0, unplayedSongs.Count)])) {Name = $"PlaySongThread" };
+            songthread = new Thread(() => PlaySong(unplayedSongs[SongLocation()])) {Name = $"PlaySongThread" };
             songthread.Start();
 
             loop:
@@ -64,11 +73,6 @@ namespace MusicPlayer
                     goto loop;
                 }
 
-                //if (input == "ff")
-                //{
-                //    currentSong.controls.fastForward();
-                //}
-
                 int s = int.MinValue;
                 int.TryParse(input, out s);
 
@@ -84,16 +88,16 @@ namespace MusicPlayer
         {
             Console.Clear();
 
-            PrintControlls();
+            PrintControls();
             Console.WriteLine($"Currently Playing: {currentSong.currentMedia?.name}");
 
             if (currentSong.currentMedia == null)
                 CleanAndDisplayName();
         }
 
-        private static void PrintControlls()
+        private static void PrintControls()
         {
-            var controlls = "===========\nCommands:\nPause\nPlay\nSkip\nMute\n===========\nType a number for Volume Controll: 1 - 10\n===========";
+            var controlls = "===========\nCommands:\nPause\nPlay\nSkip\nMute\n===========\nType a number for Volume Control: 1 - 10\n===========";
             Console.WriteLine(controlls);
         }
 
@@ -159,12 +163,49 @@ namespace MusicPlayer
                 
                 if((currentSong.controls.currentPosition >= currentSong.currentMedia.duration) || (currentSong.controls.currentPosition <= 0.5))
                 {
-                    currentSong.URL = unplayedSongs[rand.Next(0, unplayedSongs.Count)];
-                    currentSong.settings.volume = volume;
-                    currentSong.controls.play();
-                    CleanAndDisplayName();
+                    if(repeat)
+                    {
+                        PlaySongWithRepeats();
+                    }
+                    else
+                    {
+                        PlaySongWithoutRepeats();
+                    }
                 }
             }
+        }
+
+        public static void PlaySongWithRepeats()
+        {
+            currentSong.URL = unplayedSongs[SongLocation()];
+            currentSong.settings.volume = volume;
+            currentSong.controls.play();
+            CleanAndDisplayName();
+        }
+
+        public static void PlaySongWithoutRepeats()
+        {
+            if(unplayedSongs.Count == 0)
+            {
+                songthread.Abort();
+                Environment.Exit(exitCode: 0);
+            }
+
+            var location = SongLocation();
+
+            currentSong.URL = unplayedSongs[location];
+            currentSong.settings.volume = volume;
+            currentSong.controls.play();
+            CleanAndDisplayName();
+
+            playedSongs.Add(unplayedSongs[location]);
+            unplayedSongs.RemoveAt(location);
+        }
+
+        public static int SongLocation()
+        {
+            var location = rand.Next(0, unplayedSongs.Count);
+            return (location == unplayedSongs.Count ? location - 1 : location);
         }
     }
 }
