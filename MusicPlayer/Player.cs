@@ -182,7 +182,9 @@ namespace MusicPlayer
             if(unplayedSongs.Count == 0)
             {
                 Console.Clear();
-                Console.WriteLine("Song list compleat exiting");
+                Console.WriteLine("Song list compleated exiting");
+
+                Thread.Sleep(10000);
 
                 songthread.Abort();
                 Environment.Exit(exitCode: 0);
