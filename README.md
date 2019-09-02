@@ -2,12 +2,12 @@
 
 This project was created to teach myself multi-threaded programming, standalone C# programming, working with files/filesystems, and processing user input from the command line.
 
-##Tech
-*C#
-*Visual Studio
-*GitHub
+## Tech
+* C#
+* Visual Studio
+* GitHub
 
-##Lessons
+## Lessons
 
 Experice working with windows CMD.
 Experice working with user input and how to deal with unexpected inputs.
